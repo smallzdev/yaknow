@@ -1,0 +1,3 @@
+Readme coming soon...
+
+So far, basically it's a Slack bot. Yeah.
