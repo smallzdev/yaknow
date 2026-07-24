@@ -27,7 +27,8 @@ app.command("/yaknow-help", async ({ ack, respond }) => {
 /yaknow-cat - Sends a random cat image.
 
 In construction (not released yet):
-Nothing is in construction yet, please stay tuned for future YaKnow updates!`
+/yaknow-roll - Rolls a random number between 1 and 1,000,000. It currently works, but doesn't save even if you roll a good number.
+/yaknow-roll-leaderboard - Shows the leaderboard for the /yaknow-roll command.`
   });
 });
 
