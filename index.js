@@ -9,6 +9,8 @@ const app = new App({
   socketMode: true
 });
 
+const fs = require('fs');
+
 app.command("/yaknow-ping", async ({ command, ack, respond }) => {
   const start = Date.now();
   await ack();
@@ -25,54 +27,65 @@ app.command("/yaknow-help", async ({ ack, respond }) => {
 /yaknow-catfact - Sends a random cat fact.
 /yaknow-joke - Sends a random joke.
 /yaknow-cat - Sends a random cat image.
+/yaknow-roll - Rolls a random number between 1 and 1,000,000.
 
 In construction (not released yet):
-/yaknow-roll - Rolls a random number between 1 and 1,000,000. It currently works, but doesn't save even if you roll a good number.
-/yaknow-roll-leaderboard - Shows the leaderboard for the /yaknow-roll command.`
+/yaknow-roll-leaderboard - Shows the leaderboard for the /yaknow-roll command. Currently works, but only shows your own best, not others.`
   });
 });
 
 app.command("/yaknow-roll", async ({ command, ack, respond }) => {
   await ack();
-  const leaderboard = require("./leaderboard.json");
-  const roll = {
-    value: Math.floor(Math.random() * 1000000) + 1,
-    timestamp: new Date().toISOString(),
-    user: command.user_id
-  };
-  const fs = require("fs");
-  function saveRoll(roll) {
-    const finished = (err) => {
-        if(err){
-            console.error(err);
-            return;
-        }
-    }
 
-    const jsonData = JSON.stringify(roll, null, 2);
-    console.log(roll)
-    console.log(jsonData)
-    fs.writeFile('leaderboard.json',jsonData, finished);
+  const roll = Math.floor(Math.random() * 1000000) + 1;
+    
+  var rollData = {
+    user: command.user_id,
+    highestRoll: null,
+    lowestRoll: null,
+    rolled777: null,
+    timestamp: new Date().toISOString()
   }
-    saveRoll(roll);
 
-    if (roll.value < 200) {
-        await respond({ text: `🍀🎲✨ Wow! You rolled a ${roll.value}! That is a really low number! Cehck out the leaderboard to see if you are the lowest roller!'` });
-    }
-    if (roll.value > 900000) {
-        await respond({ text: `🍀🎲✨ Wow! You rolled a ${roll.value}! That is a really high number! Check out the leaderboard to see if you are the highest roller!'` });
-    }
-    if (roll.value == 777) {
-        await respond({ text: `🍀🎲✨ Wow! You rolled a ${roll.value}! That is a really lucky number! Check out the leaderboard to see if you are the luckiest roller!'` });
-    }
-    else {
-        await respond({ text: `🎲 You rolled a ${roll.value}! Unfortunately, this isnt a rare number, however you might as well check the leaderboard just incase.` });
-    }
-  });
+  var jsonData = JSON.stringify(rollData)
 
-app.command("/yaknow-roll-leaderboard", async ({ ack, respond }) => {
-    await ack();
-    await respond({ text: 'The leaderboard is still in construction, check back soon :)' });
+  let data = {};
+  if (fs.existsSync("leaderboard.json")) {
+    data = JSON.parse(fs.readFileSync("leaderboard.json", "utf8"));
+  }
+  if (!data[command.user_id]) {
+    data[command.user_id] = {
+      highestRoll: roll,
+      lowestRoll: roll,
+      rolled777: false
+    }
+  }
+
+  if (roll < data[command.user_id].lowestRoll) {
+    data[command.user_id].lowestRoll = roll;
+  }
+  if (roll > data[command.user_id].highestRoll) {
+    data[command.user_id].highestRoll = roll;
+  }
+  if (roll === 777) {
+    data[command.user_id].rolled777 = true;
+  }
+
+  fs.writeFileSync("leaderboard.json", JSON.stringify(data, null, 2))
+
+  if (roll < 200) {
+    await respond({ text: `🍀🎲✨ Wow! You rolled a ${roll}! That is a really low number! Cehck out the leaderboard to see if you are the lowest roller!'` });
+  }
+  else if (roll > 900000) {
+    await respond({ text: `🍀🎲✨ Wow! You rolled a ${roll}! That is a really high number! Check out the leaderboard to see if you are the highest roller!'` });
+  }
+  else if (roll === 777) {
+    await respond({ text: `🍀🎲✨ Wow! You rolled a ${roll}! That is a really lucky number! Check out the leaderboard to see if you are the luckiest roller!'` });
+  }
+  else {
+    await respond({ text: `🎲 You rolled a ${roll}! Unfortunately, this isnt a rare number, however you might as well check the leaderboard just incase.` });
+  }
+
 });
 
 app.command("/yaknow-catfact", async ({ ack, respond }) => {
@@ -84,6 +97,20 @@ app.command("/yaknow-catfact", async ({ ack, respond }) => {
   } catch (err) {
     await respond({ text: "Failed to fetch a cat fact." });
   }
+});
+
+app.command("/yaknow-roll-leaderboard", async ({ command, ack, respond }) => {
+  await ack();
+  let leaderboard = {};
+  if (fs.existsSync("leaderboard.json")) {
+    leaderboard = JSON.parse(fs.readFileSync("leaderboard.json", "utf8"));
+  }
+  const userProfileLinkThingy = leaderboard[command.user_id];
+
+  await respond({ text: "Roll Leaderboard 🏆", text: "Note: Currently this only displays your stats. I plan to make this an actual leaderboard in a later update.",
+    text: `⬆️ Highest Roll: ${userProfileLinkThingy.highestRoll} ⬇️ Lowest Roll: ${userProfileLinkThingy.lowestRoll} ☘️ Rolled 777?: ${userProfileLinkThingy.rolled777}`
+  })
+
 });
 
 app.command("/yaknow-joke", async ({ ack, respond }) => {
