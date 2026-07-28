@@ -16,6 +16,7 @@ Currently, this bot runs 24/7 on Hackclub nest.
 <br>
 
 **Why I created this project? 🤔**
+<br>
 I created this slack bot as a beginner project into javascript and slackbot development. I'm really happy how it ended up, and that I made the bot save rolls for each user.
 
 **Features list 🎯**
